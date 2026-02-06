@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id          String        @id
+  sku         String        @unique
+  name        String
+  category    String
+  quantity    Int           @default(0)
+  unit        String        @default("pcs")
+  price       Float?
+  image       String?
+  status      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  Transaction Transaction[]
+}
+
+model Transaction {
+  id        String   @id
+  type      String
+  quantity  Int
+  productId String
+  date      DateTime @default(now())
+  notes     String?
+  Product   Product  @relation(fields: [productId], references: [id])
+}
