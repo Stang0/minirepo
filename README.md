@@ -35,7 +35,7 @@ Frontend ใช้ **Next.js**
 
 Backend ถูกพัฒนาด้วย **Node.js** ทำหน้าที่เป็น API Server และเชื่อมต่อกับฐานข้อมูล PostgreSQL
 
-### 📦 Key Libraries
+###  Key Libraries
 
 - **Express** (`express`)
   - **ทำหน้าที่อะไร:** Web Framework Node.js ใช้ทำ Web Server และ API Routes
