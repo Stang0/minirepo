@@ -7,27 +7,115 @@ datasource db {
   provider = "postgresql"
 }
 
-model Product {
-  id          String        @id
-  sku         String        @unique
-  name        String
-  category    String
-  quantity    Int           @default(0)
-  unit        String        @default("pcs")
-  price       Float?
-  image       String?
-  status      String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime
-  Transaction Transaction[]
+enum Role {
+  STAFF
+  DEPARTMENT_MANAGER
+  STORE_MANAGER
+  ADMIN
 }
 
-model Transaction {
-  id        String   @id
-  type      String
-  quantity  Int
-  productId String
-  date      DateTime @default(now())
-  notes     String?
-  Product   Product  @relation(fields: [productId], references: [id])
+enum RequestType {
+  STOCK_OUT
+  BORROW
+}
+
+enum RequestStatus {
+  PENDING
+  WAITING_STORE_APPROVAL
+  REJECTED
+  COMPLETED
+}
+
+enum ApprovalStatus {
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id             String          @id
+  name           String
+  username       String          @unique
+  password       String          @default("demo1234")
+  role           Role
+  department     String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  requests       StockRequest[]  @relation("Requester")
+  approvals      Approval[]      @relation("Approver")
+  logs           Log[]
+  stockMovements StockMovement[] @relation("MovementActor")
+}
+
+model Product {
+  id             String          @id
+  sku            String          @unique
+  name           String
+  category       String
+  quantity       Int             @default(0)
+  unit           String          @default("pcs")
+  price          Float?
+  image          String?
+  qrCode         String?         @unique
+  minStock       Int             @default(5)
+  status         String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  requests       StockRequest[]
+  stockMovements StockMovement[]
+}
+
+model StockRequest {
+  id          String        @id
+  requesterId String
+  productId   String
+  quantity    Int
+  type        RequestType
+  status      RequestStatus @default(PENDING)
+  reason      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  completedAt DateTime?
+  requester   User          @relation("Requester", fields: [requesterId], references: [id])
+  product     Product       @relation(fields: [productId], references: [id])
+  approvals   Approval[]
+  movements   StockMovement[]
+}
+
+model Approval {
+  id         String         @id
+  requestId  String
+  approverId String
+  stage      Int
+  role       Role
+  status     ApprovalStatus
+  comment    String?
+  actedAt    DateTime       @default(now())
+  request    StockRequest   @relation(fields: [requestId], references: [id])
+  approver   User           @relation("Approver", fields: [approverId], references: [id])
+}
+
+model StockMovement {
+  id           String       @id
+  requestId    String?
+  productId    String
+  createdById  String
+  type         String
+  quantity     Int
+  balanceAfter Int
+  note         String?
+  createdAt    DateTime     @default(now())
+  request      StockRequest? @relation(fields: [requestId], references: [id])
+  product      Product      @relation(fields: [productId], references: [id])
+  createdBy    User         @relation("MovementActor", fields: [createdById], references: [id])
+}
+
+model Log {
+  id         String   @id
+  action     String
+  entityType String
+  entityId   String
+  details    String?
+  userId     String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
 }

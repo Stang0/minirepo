@@ -4,12 +4,26 @@
   --color-primary: #135bec;
   --color-background-light: #f6f6f8;
   --color-background-dark: #101622;
+  --color-surface-container: #f1f3f9;
+  --color-surface-container-low: #f8f9fc;
+  --color-surface-container-high: #e9edf5;
+  --color-outline: #cbd5e1;
+  --color-outline-variant: #e2e8f0;
   --color-surface-light: #ffffff;
   --color-surface-dark: #1a2230;
   --color-border-light: #e5e7eb;
   --color-border-dark: #2d3748;
 
   --font-display: "Manrope", sans-serif;
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: #f6f6f8;
+  color: #0f172a;
+  font-family: "Manrope", sans-serif;
 }
 
 /* Material Symbols Utilities */
@@ -34,4 +48,19 @@
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+}
+
+button,
+input,
+select,
+textarea {
+  outline: none;
+}
+
+.headline-font {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.body-font {
+  font-family: "Inter", sans-serif;
 }
