@@ -140,6 +140,7 @@ export default function ProductsPage() {
             <p><span className="font-bold text-slate-900">SKU:</span> {scanResult.sku}</p>
             <p><span className="font-bold text-slate-900">Stock:</span> {scanResult.quantity} {scanResult.unit}</p>
             <p><span className="font-bold text-slate-900">QR:</span> {scanResult.qrCode || 'No QR assigned yet'}</p>
+            <p><span className="font-bold text-slate-900">Request Status:</span> {scanResult.requests?.[0] ? scanResult.requests[0].status.replaceAll('_', ' ') : '-'}</p>
           </div>
         </section>
       )}

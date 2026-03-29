@@ -24,6 +24,7 @@ export interface Product {
   qrCode: string | null;
   minStock: number;
   status: string | null;
+  requests?: StockRequest[];
 }
 
 export interface Approval {

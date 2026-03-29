@@ -17,12 +17,12 @@ router.get('/', async (req, res) => {
     const products = await prisma.product.findMany({
       where: search
         ? {
-            OR: [
-              { sku: { contains: search, mode: 'insensitive' } },
-              { name: { contains: search, mode: 'insensitive' } },
-              { category: { contains: search, mode: 'insensitive' } }
-            ]
-          }
+          OR: [
+            { sku: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search, mode: 'insensitive' } },
+            { category: { contains: search, mode: 'insensitive' } }
+          ]
+        }
         : undefined,
       orderBy: [{ status: 'desc' }, { updatedAt: 'desc' }]
     });
@@ -43,6 +43,20 @@ router.get('/scan/:code', async (req, res) => {
     const product = await prisma.product.findFirst({
       where: {
         OR: [{ qrCode: code }, { sku: code }, { id: code }]
+      },
+      include: {
+        requests: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          include: {
+            approvals: {
+              orderBy: { stage: 'asc' },
+              include: {
+                approver: true
+              }
+            }
+          }
+        }
       }
     });
 
