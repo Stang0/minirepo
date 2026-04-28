@@ -16,13 +16,21 @@ export default function ApprovalsPage() {
 
   const queue = (requests ?? []).filter((request) => {
     if (user?.role === 'DEPARTMENT_MANAGER') return request.status === 'PENDING';
-    if (user?.role === 'STORE_MANAGER') return request.status === 'WAITING_STORE_APPROVAL';
-    return ['PENDING', 'WAITING_STORE_APPROVAL'].includes(request.status);
+    if (user?.role === 'STORE_MANAGER') return ['WAITING_STORE_APPROVAL', 'WAITING_STOCK_CONFIRMATION'].includes(request.status);
+    return ['PENDING', 'WAITING_STORE_APPROVAL', 'WAITING_STOCK_CONFIRMATION'].includes(request.status);
   });
 
   const handleDecision = async (requestId: string, decision: 'APPROVED' | 'REJECTED') => {
     const comment = window.prompt('Comment for this decision') || '';
     await api.patch(`/requests/${requestId}/decision`, { decision, comment });
+    mutate('/requests');
+    mutate('/dashboard/summary');
+    mutate('/products');
+  };
+
+  const handleStockConfirmation = async (requestId: string) => {
+    const comment = window.prompt('Comment for stock confirmation') || '';
+    await api.patch(`/requests/${requestId}/stock-confirmation`, { comment });
     mutate('/requests');
     mutate('/dashboard/summary');
     mutate('/products');
@@ -53,14 +61,22 @@ export default function ApprovalsPage() {
                   <p className="mt-3 text-sm text-slate-500">{request.reason || 'No additional reason provided.'}</p>
                 </div>
 
-                <div className="flex gap-3">
-                  <button onClick={() => handleDecision(request.id, 'REJECTED')} className="rounded-lg border border-rose-200 px-4 py-3 text-sm font-bold text-rose-600 transition-colors hover:bg-rose-50">
-                    Reject
-                  </button>
-                  <button onClick={() => handleDecision(request.id, 'APPROVED')} className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700">
-                    Approve
-                  </button>
-                </div>
+                {request.status === 'WAITING_STOCK_CONFIRMATION' ? (
+                  <div className="flex gap-3">
+                    <button onClick={() => handleStockConfirmation(request.id)} className="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700">
+                      Confirm Stock Deduction
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <button onClick={() => handleDecision(request.id, 'REJECTED')} className="rounded-lg border border-rose-200 px-4 py-3 text-sm font-bold text-rose-600 transition-colors hover:bg-rose-50">
+                      Reject
+                    </button>
+                    <button onClick={() => handleDecision(request.id, 'APPROVED')} className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700">
+                      Approve
+                    </button>
+                  </div>
+                )}
               </div>
             </article>
           ))}

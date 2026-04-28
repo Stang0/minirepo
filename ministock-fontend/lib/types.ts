@@ -41,8 +41,11 @@ export interface StockRequest {
   id: string;
   quantity: number;
   type: 'STOCK_OUT' | 'BORROW';
-  status: 'PENDING' | 'WAITING_STORE_APPROVAL' | 'REJECTED' | 'COMPLETED';
+  status: 'PENDING' | 'WAITING_STORE_APPROVAL' | 'WAITING_PICKUP_CONFIRMATION' | 'WAITING_STOCK_CONFIRMATION' | 'REJECTED' | 'COMPLETED';
   reason: string | null;
+  pickupImage: string | null;
+  pickupConfirmedAt: string | null;
+  stockConfirmedAt: string | null;
   createdAt: string;
   completedAt: string | null;
   requester: SessionUser;

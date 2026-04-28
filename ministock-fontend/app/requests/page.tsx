@@ -20,6 +20,8 @@ export default function RequestsPage() {
   const { data: products } = useSWR<Product[]>(user ? '/products' : null, fetcher);
   const [openForm, setOpenForm] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [pickupUploadingId, setPickupUploadingId] = useState<string | null>(null);
+  const [pickupError, setPickupError] = useState('');
 
   const createRequest = async (payload: { productId: string; quantity: number; type: 'STOCK_OUT' | 'BORROW'; reason: string }) => {
     try {
@@ -33,6 +35,28 @@ export default function RequestsPage() {
         return;
       }
       setSubmitError('Failed to create request');
+    }
+  };
+
+  const uploadPickupConfirmation = async (requestId: string, file: File) => {
+    try {
+      setPickupError('');
+      setPickupUploadingId(requestId);
+      const formData = new FormData();
+      formData.append('image', file);
+      await api.patch(`/requests/${requestId}/pickup-confirmation`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      mutate('/requests');
+      mutate('/dashboard/summary');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setPickupError((error.response?.data as { error?: string } | undefined)?.error || 'Failed to upload pickup confirmation');
+        return;
+      }
+      setPickupError('Failed to upload pickup confirmation');
+    } finally {
+      setPickupUploadingId(null);
     }
   };
 
@@ -51,6 +75,11 @@ export default function RequestsPage() {
       )}
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        {pickupError && (
+          <div className="mx-6 mt-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+            {pickupError}
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left">
             <thead>
@@ -85,9 +114,33 @@ export default function RequestsPage() {
                       {request.approvals.map((approval) => (
                         <div key={approval.id} className="rounded-lg bg-slate-50 px-3 py-2">
                           <p className="text-sm font-semibold text-slate-900">Stage {approval.stage}: {approval.approver.name}</p>
-                          <p className="text-xs text-slate-500">{approval.status}{approval.comment ? ` • ${approval.comment}` : ''}</p>
+                          <p className="text-xs text-slate-500">{approval.status}{approval.comment ? ` - ${approval.comment}` : ''}</p>
                         </div>
                       ))}
+                      {request.pickupImage && (
+                        <a href={request.pickupImage} target="_blank" rel="noreferrer" className="inline-flex text-sm font-semibold text-blue-700 hover:underline">
+                          View pickup image
+                        </a>
+                      )}
+                      {user?.id === request.requester.id && request.status === 'WAITING_PICKUP_CONFIRMATION' && (
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-700">
+                          <span className="material-symbols-outlined text-base">photo_camera</span>
+                          {pickupUploadingId === request.id ? 'Uploading...' : 'Confirm Pickup (Upload Photo)'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={pickupUploadingId === request.id}
+                            onChange={(event) => {
+                              const selected = event.target.files?.[0];
+                              if (selected) {
+                                uploadPickupConfirmation(request.id, selected);
+                              }
+                              event.currentTarget.value = '';
+                            }}
+                          />
+                        </label>
+                      )}
                     </div>
                   </td>
                 </tr>
